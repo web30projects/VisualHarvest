@@ -16,17 +16,18 @@ public class SearchTweetSource implements TweetSource {
 	Logger log = Logger.getLogger(getClass());
 
 	private final Twitter twitter;
+	private int limit = 50;
 
 	public SearchTweetSource(Twitter twitter) {
 		this.twitter = twitter;
 	}
 
 	@Override
-	public List<Status> getTweets(String queryString) {
+	public List<Status> getTweets(String containsText) {
 		log.debug("Obtaining tweets via Twitter Search API");
-		final Query query = new Query(queryString + " -RT");
+		final Query query = new Query(containsText + " -RT");
 		query.setLang("en");
-		query.setCount(100);
+		query.setCount(limit);
 		try {
 			final QueryResult queryResult = twitter.search(query);
 			return queryResult.getTweets();
@@ -34,6 +35,11 @@ public class SearchTweetSource implements TweetSource {
 			log.error("Error retrieving tweets from Twitter Search API", e);
 		}
 		return new ArrayList<>();
+	}
+
+	@Override
+	public void maxResults(int limit) {
+		this.limit = limit;
 	}
 
 }

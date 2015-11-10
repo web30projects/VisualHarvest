@@ -6,5 +6,7 @@ import twitter4j.Status;
 
 public interface TweetSource {
 
-	List<Status> getTweets(String criteria);
+	List<Status> getTweets(String containsText);
+
+	public void maxResults(int limit);
 }

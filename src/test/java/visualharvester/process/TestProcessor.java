@@ -9,12 +9,15 @@ import org.junit.Test;
 import twitter4j.TwitterFactory;
 import visualharvester.objects.Tweet;
 import visualharvester.sources.SearchTweetSource;
+import visualharvester.sources.TweetSource;
 
 public class TestProcessor {
 
 	@Test
-	public void testAugmentTweets() {
-		final Processor processor = new Processor(new SearchTweetSource(TwitterFactory.getSingleton()));
+	public void testAugmentTweets_SearchAPI() {
+		final TweetSource source = new SearchTweetSource(TwitterFactory.getSingleton());
+		source.maxResults(10);
+		final Processor processor = new Processor(source);
 		final List<Tweet> augmentTweets = processor.augmentTweets("beach");
 
 		assertNotNull(augmentTweets);
