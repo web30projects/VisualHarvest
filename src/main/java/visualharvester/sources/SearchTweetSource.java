@@ -17,15 +17,29 @@ public class SearchTweetSource implements TweetSource {
 
 	private final Twitter twitter;
 	private int limit = 50;
+	private boolean allowRetweets = true;
 
 	public SearchTweetSource(Twitter twitter) {
 		this.twitter = twitter;
 	}
 
 	@Override
+	public void disableRetweets() {
+		allowRetweets = false;
+	}
+
+	@Override
 	public List<Status> getTweets(String containsText) {
-		log.debug("Obtaining tweets via Twitter Search API");
-		final Query query = new Query(containsText + " -RT");
+		log.debug("Obtaining " + limit + " tweets via Twitter Search API");
+
+		final Query query;
+
+		if (allowRetweets) {
+			query = new Query(containsText);
+		} else {
+			query = new Query(containsText + " -RT");
+		}
+
 		query.setLang("en");
 		query.setCount(limit);
 		try {
@@ -38,7 +52,7 @@ public class SearchTweetSource implements TweetSource {
 	}
 
 	@Override
-	public void maxResults(int limit) {
+	public void sourceLimit(int limit) {
 		this.limit = limit;
 	}
 

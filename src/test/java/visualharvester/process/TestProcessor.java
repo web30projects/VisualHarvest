@@ -16,11 +16,16 @@ public class TestProcessor {
 	@Test
 	public void testAugmentTweets_SearchAPI() {
 		final TweetSource source = new SearchTweetSource(TwitterFactory.getSingleton());
-		source.maxResults(10);
+		source.sourceLimit(100);
 		final Processor processor = new Processor(source);
 		final List<Tweet> augmentTweets = processor.augmentTweets("beach");
 
 		assertNotNull(augmentTweets);
+	}
+
+	@Test
+	public void testAugmentTweets_StreamAPI() {
+
 	}
 
 }

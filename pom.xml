@@ -8,6 +8,7 @@
 
 	<dependencies>
 
+
 		<!-- TWITTER4J -->
 		<dependency>
 			<groupId>org.twitter4j</groupId>
@@ -82,6 +83,11 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver</artifactId>
+			<version>3.0.4</version>
+		</dependency>
 	</dependencies>
 
 	<build>

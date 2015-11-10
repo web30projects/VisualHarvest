@@ -50,9 +50,10 @@ public class Processor {
 				// TODO Entity Extraction via OpenNLP or Clavin
 			}
 
-			if (tweet.getLocation() != null) {
-				final List<String> images = tweet.getImageUrls();
+			final List<String> images = tweet.getImageUrls();
 
+			if (tweet.getLocation().isInitialized() == true) {
+				log.debug(tweet.getText());
 				// Extract URL from Tweet Text
 				final String tweetUrl = new UrlExtractor().extractUrl(tweet.getText());
 				if ((tweetUrl != null) && !tweetUrl.isEmpty()) {
@@ -78,14 +79,13 @@ public class Processor {
 						final List<String> wikipediaImageUrls = new ImageExtractor().extractImageUrls(articleUrl);
 						images.addAll(wikipediaImageUrls);
 					}
-
 				}
-
-				log.debug("Total Images associated with this tweet: " + images.size());
 			}
-
 		}
+
 		log.debug("Found a total of " + geoTweets + " geotagged tweets");
+
+		// TODO Place results into mongodb
 
 		return augmentedTweets;
 	}
