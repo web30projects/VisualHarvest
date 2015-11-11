@@ -11,7 +11,7 @@ import com.mongodb.client.MongoDatabase;
 import visualharvester.objects.Location;
 import visualharvester.objects.Tweet;
 
-public class MongoStorage {
+public class MongoStorage implements Storage {
 
 	MongoClient client;
 	MongoDatabase database;
@@ -49,7 +49,7 @@ public class MongoStorage {
 		collection.insertOne(document);
 	}
 
-	public void insertTweets(List<Tweet> tweets) {
+	public void storeTweets(List<Tweet> tweets) {
 		client = new MongoClient(hostname, port);
 		database = client.getDatabase(databaseName);
 		collection = database.getCollection(collectionName);

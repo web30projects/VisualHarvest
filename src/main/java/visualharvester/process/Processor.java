@@ -25,7 +25,7 @@ public class Processor {
 		this.source = source;
 	}
 
-	public List<Tweet> augmentTweets(String criteria) {
+	public List<Tweet> augmentTweets(String criteria, boolean ignoreCoordinates) {
 		log.debug("Augmenting Tweets with criteria: " + criteria + " " + source.getClass().getName());
 
 		final List<Tweet> augmentedTweets = new ArrayList<>();
@@ -52,7 +52,7 @@ public class Processor {
 
 			final List<String> images = tweet.getImageUrls();
 
-			if (tweet.getLocation().isInitialized() == true) {
+			if (tweet.getLocation().isInitialized() == true || ignoreCoordinates) {
 				log.debug(tweet.getText());
 				// Extract URL from Tweet Text
 				final String tweetUrl = new UrlExtractor().extractUrl(tweet.getText());
@@ -63,20 +63,23 @@ public class Processor {
 
 				// Extract Images from Tweet's URL
 				if (tweet.getTweetUrl() != null) {
-					final List<String> tweetImageUrls = new ImageExtractor().extractImageUrls(tweet.getTweetUrl());
+					final List<String> tweetImageUrls = new ImageExtractor("C:\\Users\\michael\\Desktop\\tweets", tweet
+							.getId().toString() + " _ " + tweet.getText().substring(0, tweet.getText().length() < 31 ? tweet.getText().length() -1)).extractImageUrls(tweet.getTweetUrl());
 					log.debug("Found " + tweetImageUrls.size() + " images within the Tweet's URL");
 					images.addAll(tweetImageUrls);
 				}
 
 				// Find nearby articles and extract images from them
 				if (tweet.getLocation().isInitialized()) {
-					final List<String> articleList = new NearbyArticleExtractor()
-							.getNearbyArticles(tweet.getLocation().getLatitude(), tweet.getLocation().getLongitude());
+					final List<String> articleList = new NearbyArticleExtractor().getNearbyArticles(tweet.getLocation()
+							.getLatitude(), tweet.getLocation().getLongitude());
 
 					log.debug("Found " + articleList.size() + " nearby articles");
 					for (final String string : articleList) {
-						final String articleUrl = wikibase + string.replace(" ", "_");
-						final List<String> wikipediaImageUrls = new ImageExtractor().extractImageUrls(articleUrl);
+						String titleUrl = string.replace(" ", "_");
+						final String articleUrl = wikibase + titleUrl;
+						final List<String> wikipediaImageUrls = new ImageExtractor(
+								"C:\\Users\\michael\\Desktop\\tweets", titleUrl).extractImageUrls(articleUrl);
 						images.addAll(wikipediaImageUrls);
 					}
 				}

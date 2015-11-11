@@ -18,7 +18,16 @@ public class ImageExtractor {
 
 	Logger log = Logger.getLogger(getClass());
 
+	File directory;
+
 	private final String[] imageExtensions = { ".jpg", ".jpeg", ".png", ".bmp", ".gif" };
+
+	public ImageExtractor(String storageDirectoryPath, String subdirectory) {
+		directory = new File(storageDirectoryPath + File.separator + subdirectory);
+		if (!directory.exists()) {
+			directory.mkdirs();
+		}
+	}
 
 	public List<String> extractImageUrls(String sourceUrl) {
 		log.debug("Extracting Image URLs from " + sourceUrl);
@@ -71,16 +80,18 @@ public class ImageExtractor {
 		// Filter images for size
 		for (final String urlString : allImageUrls) {
 			try {
-				final File file = File.createTempFile("web30_", ".tmp");
-				file.deleteOnExit();
-
 				if (urlString.startsWith("http")) {
 					final URL url = new URL(urlString);
+					final File file = new File(url.getFile());
 					FileUtils.copyURLToFile(url, file);
 
 					// If image file is greater than 15KB, consider it relevant
 					// TODO include nudity filtering here
 					if (file.length() > (15 * 1024)) {
+						log.debug("saving file");
+						File image = new File(directory.getAbsolutePath() + File.separator + file.getName());
+						FileUtils.copyFile(file, image);
+
 						urls.add(urlString);
 					}
 
@@ -88,11 +99,16 @@ public class ImageExtractor {
 
 				if (urlString.startsWith("//")) {
 					final URL url = new URL("https:" + urlString);
+					final File file = new File(url.getFile());
 					FileUtils.copyURLToFile(url, file);
 
 					// If image file is greater than 15KB, consider it relevant
 					// TODO include nudity filtering here
 					if (file.length() > (5 * 1024)) {
+						log.debug("saving file");
+						File image = new File(directory.getAbsolutePath() + File.separator + file.getName());
+						FileUtils.copyFile(file, image);
+
 						urls.add("https:" + urlString);
 					}
 
@@ -105,7 +121,22 @@ public class ImageExtractor {
 			}
 		}
 
+		if (urls.isEmpty()) {
+			deleteDirectory(directory);
+		}
+
 		return urls;
+	}
+
+	private void deleteDirectory(File directory) {
+		for (File file : directory.listFiles()) {
+			if (file.isDirectory()) {
+				deleteDirectory(file);
+			} else {
+				file.delete();
+			}
+		}
+		directory.delete();
 	}
 
 	private boolean hasImageExtension(String string) {
