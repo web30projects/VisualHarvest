@@ -9,16 +9,16 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyUtil;
 import org.glassfish.jersey.server.ResourceConfig;
 
-public class StreamService extends BasicService {
+public class RestService extends BasicService {
 
-	static Logger log = Logger.getLogger(StreamService.class);
+	static Logger log = Logger.getLogger(RestService.class);
 
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args) {
 
 		final boolean runServerWithStream = true;
 
-		final StreamService service = new StreamService();
+		final RestService service = new RestService();
 		final HttpServer server = service.buildServer();
 
 		try {
@@ -32,7 +32,7 @@ public class StreamService extends BasicService {
 
 	}
 
-	public StreamService() {
+	public RestService() {
 		final String host = "localhost";
 		final int port = 4222;
 		serviceUri = uriBuilder.resolveTemplate("host", host).resolveTemplate("port", port).build();
@@ -44,7 +44,7 @@ public class StreamService extends BasicService {
 		httpServer.addListener(listener);
 
 		final ServerConfiguration config = httpServer.getServerConfiguration();
-		final CLStaticHttpHandler fileContainer = new CLStaticHttpHandler(StreamService.class.getClassLoader());
+		final CLStaticHttpHandler fileContainer = new CLStaticHttpHandler(RestService.class.getClassLoader());
 		config.addHttpHandler(fileContainer, "/web");
 
 		final ResourceConfig rc = new ResourceConfig().packages("visualharvester.service");
