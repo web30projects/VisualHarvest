@@ -12,6 +12,9 @@ import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
+import visualharvester.objects.Location;
+import visualharvester.objects.Tweet;
+
 public class TestNearbyArticleExtractor {
 
 	Logger log = Logger.getLogger(getClass());
@@ -20,8 +23,15 @@ public class TestNearbyArticleExtractor {
 	public void testGetNearbyArticles_Coordinates() throws ParserConfigurationException, IOException, SAXException {
 		log.debug("testGetNearbyArticles_Coordinates");
 
+		final Tweet testTweet = new Tweet();
+		final Location testLocation = new Location();
+		testLocation.setInitialized(true);
+		testLocation.setLatitude(37.786971);
+		testLocation.setLongitude(-122.399677);
+		testTweet.setLocation(testLocation);
+
 		final NearbyArticleExtractor nearby = new NearbyArticleExtractor();
-		final List<String> nearbyArticles = nearby.getNearbyArticles(37.786971, -122.399677);
+		final List<String> nearbyArticles = nearby.getNearbyArticles(testTweet);
 
 		assertTrue(nearbyArticles.contains("Wikimedia Foundation"));
 		assertTrue(nearbyArticles.contains("140 New Montgomery"));

@@ -20,14 +20,13 @@ public class Processor {
 
 	TweetSource source;
 	String wikibase = "https://en.wikipedia.org/wiki/";
+	String localPath = "C:\\Users\\Michael\\Desktop\\tweets";
 
 	public Processor(TweetSource source) {
 		this.source = source;
 	}
 
 	public List<Tweet> augmentTweets(String criteria, boolean ignoreCoordinates) {
-		log.debug("Augmenting Tweets with criteria: " + criteria + " " + source.getClass().getName());
-
 		final List<Tweet> augmentedTweets = new ArrayList<>();
 
 		final List<Status> tweetList = source.getTweets(criteria);
@@ -42,7 +41,6 @@ public class Processor {
 			// Handle location details
 			final GeoLocation statusLocation = status.getGeoLocation();
 			if (statusLocation != null) {
-				log.debug("Location found in metadata");
 				geoTweets++;
 				final Location location = new Location(statusLocation.getLatitude(), statusLocation.getLongitude());
 				tweet.setLocation(location);
@@ -52,35 +50,25 @@ public class Processor {
 
 			final List<String> images = tweet.getImageUrls();
 
-			if (tweet.getLocation().isInitialized() == true || ignoreCoordinates) {
-				log.debug(tweet.getText());
+			if ((tweet.getLocation().isInitialized() == true) || ignoreCoordinates) {
 				// Extract URL from Tweet Text
 				final String tweetUrl = new UrlExtractor().extractUrl(tweet.getText());
 				if ((tweetUrl != null) && !tweetUrl.isEmpty()) {
 					tweet.setTweetUrl(tweetUrl);
-					log.debug("Tweet contains URL: " + tweetUrl);
 				}
 
 				// Extract Images from Tweet's URL
 				if (tweet.getTweetUrl() != null) {
-					final List<String> tweetImageUrls = new ImageExtractor("C:\\Users\\michael\\Desktop\\tweets", tweet
-							.getId().toString() + " _ " + tweet.getText().substring(0, tweet.getText().length() < 31 ? tweet.getText().length() -1)).extractImageUrls(tweet.getTweetUrl());
-					log.debug("Found " + tweetImageUrls.size() + " images within the Tweet's URL");
-					images.addAll(tweetImageUrls);
+					images.addAll(processUrlForImages(tweet.getTweetUrl(), tweet.getId().toString()));
 				}
 
 				// Find nearby articles and extract images from them
 				if (tweet.getLocation().isInitialized()) {
-					final List<String> articleList = new NearbyArticleExtractor().getNearbyArticles(tweet.getLocation()
-							.getLatitude(), tweet.getLocation().getLongitude());
+					final List<String> articleList = new NearbyArticleExtractor().getNearbyArticles(tweet);
 
-					log.debug("Found " + articleList.size() + " nearby articles");
 					for (final String string : articleList) {
-						String titleUrl = string.replace(" ", "_");
-						final String articleUrl = wikibase + titleUrl;
-						final List<String> wikipediaImageUrls = new ImageExtractor(
-								"C:\\Users\\michael\\Desktop\\tweets", titleUrl).extractImageUrls(articleUrl);
-						images.addAll(wikipediaImageUrls);
+						final String articleUrl = wikibase + string.replace(" ", "_");
+						images.addAll(processUrlForImages(articleUrl, string));
 					}
 				}
 			}
@@ -93,4 +81,16 @@ public class Processor {
 		return augmentedTweets;
 	}
 
+	public String getLocalPath() {
+		return localPath;
+	}
+
+	private List<String> processUrlForImages(String url, String identifier) {
+		log.debug("Extracting images for Tweet: " + identifier);
+		return new ImageExtractor(localPath).extractImageUrls(url);
+	}
+
+	public void setLocalPath(String localPath) {
+		this.localPath = localPath;
+	}
 }

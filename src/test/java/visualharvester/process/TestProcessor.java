@@ -16,9 +16,10 @@ public class TestProcessor {
 	@Test
 	public void testAugmentTweets_SearchAPI() {
 		final TweetSource source = new SearchTweetSource(TwitterFactory.getSingleton());
-		source.sourceLimit(10);
+		source.sourceLimit(100);
+		source.disableRetweets();
 		final Processor processor = new Processor(source);
-		final List<Tweet> augmentTweets = processor.augmentTweets("hottie", true);
+		final List<Tweet> augmentTweets = processor.augmentTweets("mesos", true);
 
 		assertNotNull(augmentTweets);
 	}
