@@ -3,6 +3,12 @@ package visualharvester.objects;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Tweet {
 
 	String text = null;
@@ -10,6 +16,10 @@ public class Tweet {
 	Location location = null;
 	String tweetUrl = null;
 	List<String> imageUrls = null;
+
+	public Tweet() {
+
+	}
 
 	public Long getId() {
 		return id;

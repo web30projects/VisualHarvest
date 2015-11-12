@@ -29,22 +29,22 @@ public class StreamListener implements StatusListener {
 
 	@Override
 	public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
-		// TODO Auto-generated method stub
+		// Unused for application purposes; included to meet interface contract
 	}
 
 	@Override
 	public void onException(Exception ex) {
-		// TODO Auto-generated method stub
+		// Unused for application purposes; included to meet interface contract
 	}
 
 	@Override
 	public void onScrubGeo(long userId, long upToStatusId) {
-		// TODO Auto-generated method stub
+		// Unused for application purposes; included to meet interface contract
 	}
 
 	@Override
 	public void onStallWarning(StallWarning warning) {
-		// TODO Auto-generated method stub
+		// Unused for application purposes; included to meet interface contract
 	}
 
 	@Override
@@ -58,6 +58,6 @@ public class StreamListener implements StatusListener {
 
 	@Override
 	public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-		// TODO Auto-generated method stub
+		// Unused for application purposes; included to meet interface contract
 	}
 }

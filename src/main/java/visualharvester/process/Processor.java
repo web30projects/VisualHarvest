@@ -13,6 +13,7 @@ import visualharvester.extractors.UrlExtractor;
 import visualharvester.objects.Location;
 import visualharvester.objects.Tweet;
 import visualharvester.sources.TweetSource;
+import visualharvester.storage.Storage;
 
 public class Processor {
 
@@ -21,6 +22,8 @@ public class Processor {
 	TweetSource source;
 	String wikibase = "https://en.wikipedia.org/wiki/";
 	String localPath = "C:\\Users\\Michael\\Desktop\\tweets";
+
+	Storage store = null;
 
 	public Processor(TweetSource source) {
 		this.source = source;
@@ -50,7 +53,7 @@ public class Processor {
 
 			final List<String> images = tweet.getImageUrls();
 
-			if ((tweet.getLocation().isInitialized() == true) || ignoreCoordinates) {
+			if (tweet.getLocation().isInitialized() || ignoreCoordinates) {
 				// Extract URL from Tweet Text
 				final String tweetUrl = new UrlExtractor().extractUrl(tweet.getText());
 				if ((tweetUrl != null) && !tweetUrl.isEmpty()) {
@@ -72,17 +75,25 @@ public class Processor {
 					}
 				}
 			}
+
+			augmentedTweets.add(tweet);
 		}
 
 		log.debug("Found a total of " + geoTweets + " geotagged tweets");
 
-		// TODO Place results into mongodb
+		if (store != null) {
+			store.storeTweets(augmentedTweets);
+		}
 
 		return augmentedTweets;
 	}
 
 	public String getLocalPath() {
 		return localPath;
+	}
+
+	public Storage getStore() {
+		return store;
 	}
 
 	private List<String> processUrlForImages(String url, String identifier) {
@@ -92,5 +103,9 @@ public class Processor {
 
 	public void setLocalPath(String localPath) {
 		this.localPath = localPath;
+	}
+
+	public void setStore(Storage store) {
+		this.store = store;
 	}
 }

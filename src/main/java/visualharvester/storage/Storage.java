@@ -6,6 +6,8 @@ import visualharvester.objects.Tweet;
 
 public interface Storage {
 
+	public void empty();
+
 	public void storeTweets(List<Tweet> tweets);
 
 }
