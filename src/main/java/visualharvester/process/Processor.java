@@ -5,8 +5,14 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import com.bericotech.clavin.ClavinException;
+import com.bericotech.clavin.GeoParser;
+import com.bericotech.clavin.GeoParserFactory;
+import com.bericotech.clavin.resolver.ResolvedLocation;
+
 import twitter4j.GeoLocation;
 import twitter4j.Status;
+import visualharvester.extractors.EntityExtractor;
 import visualharvester.extractors.ImageExtractor;
 import visualharvester.extractors.NearbyArticleExtractor;
 import visualharvester.extractors.UrlExtractor;
@@ -21,12 +27,20 @@ public class Processor {
 
 	TweetSource source;
 	String wikibase = "https://en.wikipedia.org/wiki/";
-	String localPath = "C:\\Users\\Michael\\Desktop\\tweets";
 
+	// TODO Extract these into better properties
+	String localPath = "C:/Users/michael.goetz/Desktop/tweets";
+	String indexPath = "C:/Users/michael.goetz/Desktop/CLAVIN/IndexDirectory";
+	GeoParser geoparser = null;
 	Storage store = null;
 
 	public Processor(TweetSource source) {
 		this.source = source;
+		try {
+			geoparser = GeoParserFactory.getDefault(indexPath);
+		} catch (final ClavinException e) {
+			log.error("Error initiating Clavin Geoparser", e);
+		}
 	}
 
 	public List<Tweet> augmentTweets(String criteria, boolean ignoreCoordinates) {
@@ -48,7 +62,27 @@ public class Processor {
 				final Location location = new Location(statusLocation.getLatitude(), statusLocation.getLongitude());
 				tweet.setLocation(location);
 			} else {
-				// TODO Entity Extraction via OpenNLP or Clavin
+				if (geoparser != null) {
+					final EntityExtractor entityExtractor = new EntityExtractor(geoparser);
+					final List<ResolvedLocation> extractEntities = entityExtractor.extractEntities(status.getText());
+
+					if (extractEntities.size() == 1) {
+						// one entity, assume acceptable
+						log.debug("Entity Extractor works");
+						geoTweets++;
+						final Location location = new Location(extractEntities.get(0).getGeoname().getLatitude(),
+								extractEntities.get(0).getGeoname().getLongitude());
+						tweet.setLocation(location);
+					} else if (extractEntities.size() > 1) {
+
+						log.debug("Found multiple entities (" + extractEntities.size() + ")");
+						// TODO: compare nearness of entities, if close ->select
+						// location with greatest populates, if not close, tweet
+						// has entity ambiguity and we cannot make location
+						// assumptions
+					}
+				}
+
 			}
 
 			final List<String> images = tweet.getImageUrls();
