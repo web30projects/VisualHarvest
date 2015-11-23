@@ -43,7 +43,6 @@ public class TestNearbyArticleExtractor {
 		assertTrue(nearbyArticles.contains("222 Second Street"));
 		assertTrue(nearbyArticles.contains("The Montgomery (San Francisco)"));
 		assertTrue(nearbyArticles.contains("California Historical Society"));
-
 		assertEquals(10, nearbyArticles.size());
 	}
 

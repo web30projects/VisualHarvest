@@ -15,9 +15,11 @@ public class StreamListener implements StatusListener {
 	Logger log = Logger.getLogger(getClass());
 	private List<Status> tweets;
 	private final String queryString;
+	private final boolean allowRetweets;
 
-	public StreamListener(String queryString) {
+	public StreamListener(String queryString, boolean allowRetweets) {
 		this.queryString = queryString;
+		this.allowRetweets = allowRetweets;
 	}
 
 	public List<Status> getTweets() {
@@ -50,9 +52,19 @@ public class StreamListener implements StatusListener {
 	@Override
 	public void onStatus(Status status) {
 		log.debug("Status Encountered");
-		if (status.getText().contains(queryString)) {
-			getTweets().add(status);
+
+		if (status.isRetweet() && !allowRetweets) {
+			return;
 		}
+
+		if ((queryString == null) || queryString.isEmpty()) {
+			getTweets().add(status);
+		} else {
+			if (status.getText().contains(queryString)) {
+				getTweets().add(status);
+			}
+		}
+
 		log.debug("Encountered " + getTweets().size() + " tweets");
 	}
 

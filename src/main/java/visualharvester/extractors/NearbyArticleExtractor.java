@@ -34,14 +34,12 @@ public class NearbyArticleExtractor {
 
 	public List<String> getNearbyArticles(String pageTitle) {
 
-		log.debug("Getting Nearby Articles via Article Title");
 		final List<String> articleTitles = new ArrayList<>();
 
 		try {
 			builder = factory.newDocumentBuilder();
 
 			final String query = getQuery(radiusMeters, pageTitle);
-			log.debug("Query: " + query);
 
 			final URL url = new URL(query);
 			final URLConnection connection = url.openConnection();
@@ -72,13 +70,11 @@ public class NearbyArticleExtractor {
 
 	public List<String> getNearbyArticles(Tweet tweet) {
 
-		log.debug("Getting Nearby Articles via Coordinates");
 		final List<String> articleTitles = new ArrayList<>();
 
 		try {
 			builder = factory.newDocumentBuilder();
 			final String query = getQuery(radiusMeters, tweet.getLocation());
-			log.debug("Query: " + query);
 
 			final URL url = new URL(query);
 			final URLConnection connection = url.openConnection();

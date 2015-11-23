@@ -66,16 +66,19 @@ public class Processor {
 					final EntityExtractor entityExtractor = new EntityExtractor(geoparser);
 					final List<ResolvedLocation> extractEntities = entityExtractor.extractEntities(status.getText());
 
+					for (final ResolvedLocation resolvedLocation : extractEntities) {
+						tweet.getExtractedEntities().add(resolvedLocation.getMatchedName());
+					}
+
 					if (extractEntities.size() == 1) {
-						// one entity, assume acceptable
-						log.debug("Entity Extractor works");
 						geoTweets++;
 						final Location location = new Location(extractEntities.get(0).getGeoname().getLatitude(),
 								extractEntities.get(0).getGeoname().getLongitude());
 						tweet.setLocation(location);
 					} else if (extractEntities.size() > 1) {
 
-						log.debug("Found multiple entities (" + extractEntities.size() + ")");
+						// log.debug("Found multiple entities (" +
+						// extractEntities.size() + ")");
 						// TODO: compare nearness of entities, if close ->select
 						// location with greatest populates, if not close, tweet
 						// has entity ambiguity and we cannot make location
@@ -116,7 +119,8 @@ public class Processor {
 		log.debug("Found a total of " + geoTweets + " geotagged tweets");
 
 		if (store != null) {
-			store.storeTweets(augmentedTweets);
+			store.clearTweets(criteria);
+			store.storeTweets(augmentedTweets, criteria);
 		}
 
 		return augmentedTweets;
@@ -131,7 +135,7 @@ public class Processor {
 	}
 
 	private List<String> processUrlForImages(String url, String identifier) {
-		log.debug("Extracting images for Tweet: " + identifier);
+		// log.debug("Extracting images for Tweet: " + identifier);
 		return new ImageExtractor(localPath).extractImageUrls(url);
 	}
 

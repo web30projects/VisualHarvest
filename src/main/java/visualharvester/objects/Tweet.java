@@ -16,9 +16,17 @@ public class Tweet {
 	Location location = null;
 	String tweetUrl = null;
 	List<String> imageUrls = null;
+	List<String> extractedEntities = null;
 
 	public Tweet() {
 
+	}
+
+	public List<String> getExtractedEntities() {
+		if (extractedEntities == null) {
+			extractedEntities = new ArrayList<>();
+		}
+		return extractedEntities;
 	}
 
 	public Long getId() {
@@ -45,6 +53,10 @@ public class Tweet {
 
 	public String getTweetUrl() {
 		return tweetUrl;
+	}
+
+	public void setExtractedEntities(List<String> extractedEntities) {
+		this.extractedEntities = extractedEntities;
 	}
 
 	public void setId(Long id) {

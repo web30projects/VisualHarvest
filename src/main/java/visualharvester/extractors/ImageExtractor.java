@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -23,6 +24,8 @@ public class ImageExtractor {
 	private final String[] imageExtensions = { ".jpg", ".jpeg", ".png", ".bmp", ".gif" };
 
 	public ImageExtractor(String storageDirectoryPath) {
+		// log.debug("Image Extractor storing local image files to " +
+		// storageDirectoryPath);
 		directory = new File(storageDirectoryPath);
 		if (!directory.exists()) {
 			directory.mkdirs();
@@ -30,7 +33,7 @@ public class ImageExtractor {
 	}
 
 	public List<String> extractImageUrls(String sourceUrl) {
-		log.debug("Extracting Image URLs from " + sourceUrl);
+		// log.debug("Extracting Image URLs from " + sourceUrl);
 		List<String> urls = new ArrayList<>();
 		try {
 			urls = getImageUrls(getDocument(sourceUrl));
@@ -40,8 +43,45 @@ public class ImageExtractor {
 		return urls;
 	}
 
+	private void filterImage(String urlString, List<String> urls) throws IOException {
+		final URL url = new URL(urlString);
+
+		// log.debug("URL: " + url.toString());
+
+		File file = new File(directory.getAbsoluteFile() + File.separator + getFilename(urlString));
+		if (file.exists()) {
+			file = new File(directory.getAbsolutePath() + File.separator + UUID.randomUUID().toString()
+					+ getFilename(urlString));
+		}
+
+		if (file.getName().equals("File")) {
+			log.debug("XXXXXXXXXXXXXXX" + file.getName());
+		}
+
+		FileUtils.copyURLToFile(url, file);
+		log.debug(file.getName());
+
+		// If image file is greater than 15KB, consider it relevant
+		// TODO include nudity filtering here
+		if (file.length() > (25 * 1024)) {
+			urls.add(urlString);
+		} else {
+			file.delete();
+		}
+	}
+
 	private Document getDocument(String url) throws IOException {
 		return Jsoup.connect(url).get();
+	}
+
+	private String getFilename(String urlFilePath) {
+		String filename = urlFilePath.substring(urlFilePath.lastIndexOf("/") + 1);
+
+		if (filename.contains(":")) {
+			filename = filename.substring(filename.lastIndexOf(":") + 1);
+		}
+
+		return filename;
 	}
 
 	private List<String> getImageUrls(Document document) {
@@ -59,7 +99,9 @@ public class ImageExtractor {
 			final String imageUrl = element.attr("src");
 			if (!imageUrl.isEmpty()) {
 				if (hasImageExtension(imageUrl)) {
-					allImageUrls.add(imageUrl);
+					if (!allImageUrls.contains(imageUrl)) {
+						allImageUrls.add(imageUrl);
+					}
 				}
 			}
 		}
@@ -80,41 +122,11 @@ public class ImageExtractor {
 		for (final String urlString : allImageUrls) {
 			try {
 				if (urlString.startsWith("http")) {
-					final URL url = new URL(urlString);
-					log.debug("URL: " + url.toString());
-					final File file = new File(url.getFile());
-					FileUtils.copyURLToFile(url, file);
-
-					// If image file is greater than 15KB, consider it relevant
-					// TODO include nudity filtering here
-					if (file.length() > (50 * 1024)) {
-						final String path = directory.getAbsolutePath() + File.separator + file.getName();
-
-						final File image = new File(path);
-						FileUtils.copyFile(file, image);
-						urls.add(urlString);
-					}
-
+					filterImage(urlString, urls);
 				}
-
 				if (urlString.startsWith("//")) {
-					final URL url = new URL("https:" + urlString);
-					log.debug("URL: " + url.toString());
-					final File file = new File(url.getFile());
-					FileUtils.copyURLToFile(url, file);
-
-					// If image file is greater than 15KB, consider it relevant
-					// TODO include nudity filtering here
-					if (file.length() > (5 * 1024)) {
-						File image = new File(directory.getAbsolutePath() + File.separator + file.getName());
-						if (image.exists()) {
-							image = new File(directory.getAbsolutePath() + File.separator + "0" + file.getName());
-						}
-						FileUtils.copyFile(file, image);
-						urls.add("https:" + urlString);
-					}
+					filterImage("https:" + urlString, urls);
 				}
-
 			} catch (final MalformedURLException e) {
 				log.error("Error creating URL object", e);
 			} catch (final IOException e) {

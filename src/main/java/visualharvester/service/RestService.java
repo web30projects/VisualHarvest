@@ -15,9 +15,6 @@ public class RestService extends BasicService {
 
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args) {
-
-		final boolean runServerWithStream = true;
-
 		final RestService service = new RestService();
 		final HttpServer server = service.buildServer();
 

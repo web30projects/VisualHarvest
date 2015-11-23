@@ -37,7 +37,7 @@ public class UrlExtractor {
 		}
 
 		final String extractedUrl = validateUrl(url);
-		log.debug("URL: " + extractedUrl);
+		// log.debug("URL: " + extractedUrl);
 		return extractedUrl;
 	}
 

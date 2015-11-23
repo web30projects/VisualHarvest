@@ -28,11 +28,7 @@ public class StreamTweetSource implements TweetSource {
 	public List<Status> getTweets(String containsText) {
 		final StreamListener listener;
 
-		if (allowRetweets) {
-			listener = new StreamListener(containsText);
-		} else {
-			listener = new StreamListener(containsText + " -RT");
-		}
+		listener = new StreamListener(containsText, allowRetweets);
 
 		stream.addListener(listener);
 
