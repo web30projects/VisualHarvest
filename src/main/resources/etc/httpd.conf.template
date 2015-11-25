@@ -534,11 +534,11 @@ SSLRandomSeed connect builtin
 ProxyRequests On
 #ProxyPreserveHost On
 
-ProxyPass /web3rest http://localhost:4222/rest retry=0
-ProxyPassReverse /web3rest http://localhost:4222/rest
+ProxyPass /rest http://localhost:4222/rest retry=0
+ProxyPassReverse /rest http://localhost:4222/rest
 
-ProxyPass /web3 http://localhost:4222/web  retry=0
-ProxyPassReverse /web3 http://localhost:4222/web
+ProxyPass /web http://localhost:4222/web  retry=0
+ProxyPassReverse /web http://localhost:4222/web
 
 ProxyPass /map http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/  retry=0
 ProxyPassReverse /map http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/

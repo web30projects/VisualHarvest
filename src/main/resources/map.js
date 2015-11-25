@@ -101,15 +101,16 @@ function updateTweetList(data) {
 		var lon = tweet.location.longitude;
 		var marker = L.marker([ lat, lon ]);
 
-		var content = tweet.text + "<br />";
+		var content = tweet.text + "<br /><div class='scroll'>";
 		if (tweet.imageUrls != undefined) {
 
 			for (var j = 0; j < tweet.imageUrls.length; j++) {
-				var line = "<a href='" + tweet.imageUrls[j] + "'>" + tweet.imageUrls[j] + "</a><br />";
+				var line = "<img src='" + tweet.imageUrls[j] + "'>";
 				content += line;
 			}
 
-			content += "<br />ENTITIES:<br />";
+			content += "</div>";
+			content += "<br />ENTITIES:";
 
 			for (var k = 0; k < tweet.extractedEntities.length; k++) {
 				var line = "<p>" + tweet.extractedEntities[k] + "</p>";
@@ -118,7 +119,6 @@ function updateTweetList(data) {
 		}
 
 		marker.bindPopup(content);
-
 		map.addLayer(marker);
 		tweetList[tweet.id] = marker;
 	}

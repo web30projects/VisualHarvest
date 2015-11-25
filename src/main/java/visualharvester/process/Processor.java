@@ -29,8 +29,8 @@ public class Processor {
 	String wikibase = "https://en.wikipedia.org/wiki/";
 
 	// TODO Extract these into better properties
-	String localPath = "C:/Users/michael.goetz/Desktop/tweets";
-	String indexPath = "C:/Users/michael.goetz/Desktop/CLAVIN/IndexDirectory";
+	String localPath = "C:/Users/michael/Desktop/tweets";
+	String indexPath = "C:/clavin/CLAVIN/IndexDirectory";
 	GeoParser geoparser = null;
 	Storage store = null;
 
