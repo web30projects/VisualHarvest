@@ -29,7 +29,7 @@ public class TestProcessor {
 
 	@BeforeClass
 	public static void beforeClass() {
-		store = new MongoStorage("localhost", 27017, "testdb");
+		store = new MongoStorage("localhost", 27017, "testdb", "testcollection");
 	}
 
 	@Test

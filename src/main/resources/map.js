@@ -71,7 +71,7 @@ function augmentTweets(query, limit) {
 		}
 	});
 
-	intervalList.push(setInterval(getTweets, 10000, query));
+	intervalList.push(setInterval(getTweets, 25000, query));
 }
 
 function getTweets(query) {
@@ -101,17 +101,28 @@ function updateTweetList(data) {
 		var lon = tweet.location.longitude;
 		var marker = L.marker([ lat, lon ]);
 
-		var content = tweet.text + "<br /><div class='scroll'>";
-		if (tweet.imageUrls != undefined) {
+		console.log(tweet.tweetUrl);
+		var content = "<p><a target='_blank' href='https://twitter.com/statuses/"
+				+ tweet.id + "'>Tweet URL</a>";
 
+		content += "<p><a target='_blank' href='" + tweet.tweetUrl
+				+ "'>Target URL</a>";
+
+		content += "<br />" + tweet.text;
+		if (tweet.imageUrls != undefined && tweet.imageUrls.length > 0) {
+			content += "<br /><div class='scroll'>";
 			for (var j = 0; j < tweet.imageUrls.length; j++) {
-				var line = "<img src='" + tweet.imageUrls[j] + "'>";
+				var line = "<a target='_blank' href='" + tweet.imageUrls[j]
+						+ "'>";
+				line += "<img src='" + tweet.imageUrls[j] + "'>";
+				line += "</a>"
 				content += line;
 			}
-
 			content += "</div>";
-			content += "<br />ENTITIES:";
+		}
 
+		if (tweet.extractedEntities.length > 0) {
+			content += "<p>ENTITIES:";
 			for (var k = 0; k < tweet.extractedEntities.length; k++) {
 				var line = "<p>" + tweet.extractedEntities[k] + "</p>";
 				content += line;

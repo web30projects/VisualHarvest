@@ -20,25 +20,29 @@ public class MongoStorage implements Storage {
 	Logger log = Logger.getLogger(getClass());
 	MongoClient client;
 	MongoDatabase database;
+	MongoCollection<Document> collection;
 
 	String hostname;
 	int port;
-
 	String databaseName;
+	String collectionName;
 
-	public MongoStorage(String hostname, int port, String databaseName) {
+	public MongoStorage(String hostname, int port, String databaseName, String collectionName) {
 		this.hostname = hostname;
 		this.port = port;
 		this.databaseName = databaseName;
+		this.collectionName = collectionName;
 
 		client = new MongoClient(hostname, port);
 		database = client.getDatabase(databaseName);
+		collection = database.getCollection(collectionName);
 	}
 
 	@Override
-	public void clearTweets(String collectionName) {
-		client.getDatabase(databaseName).getCollection(collectionName).drop();
-
+	public void clearTweets(String queryName) {
+		Document deleteCriteria = new Document();
+		deleteCriteria.put("query", queryName);
+		collection.deleteMany(deleteCriteria);
 	}
 
 	@Override
@@ -53,17 +57,21 @@ public class MongoStorage implements Storage {
 	}
 
 	@Override
-	public List<Tweet> getTweets(String collectionName) {
+	public List<Tweet> getTweets(String queryName) {
 
 		final MongoCollection<Document> collection = database.getCollection(collectionName);
-		final FindIterable<Document> find = collection.find();
+
+		Document getCriteria = new Document();
+		getCriteria.put("query", queryName);
+
+		final FindIterable<Document> find = collection.find(getCriteria);
 
 		final List<Tweet> tweets = new ArrayList<>();
 		for (final Document doc : find) {
 			final Tweet tweet = new Tweet();
 			tweet.setText(doc.getString("text"));
 			tweet.setTweetUrl(doc.getString("url"));
-			tweet.setId(doc.getLong("tweetId"));
+			tweet.setId(doc.getString("tweetId"));
 
 			final Location loc = new Location();
 			loc.setInitialized(true);
@@ -94,11 +102,12 @@ public class MongoStorage implements Storage {
 		return tweets;
 	}
 
-	private void insertTweet(Tweet tweet, MongoCollection<Document> collection) {
+	private void insertTweet(Tweet tweet, String queryName) {
 		final Document document = new Document();
 		document.put("text", tweet.getText());
 		document.put("tweetId", tweet.getId());
 		document.put("url", tweet.getTweetUrl());
+		document.put("query", queryName);
 
 		final List<String> imageUrls = tweet.getImageUrls();
 		final BasicDBList urlList = new BasicDBList();
@@ -133,9 +142,9 @@ public class MongoStorage implements Storage {
 	}
 
 	@Override
-	public void storeTweets(List<Tweet> tweets, String collectionName) {
+	public void storeTweets(List<Tweet> tweets, String queryName) {
 		for (final Tweet tweet : tweets) {
-			insertTweet(tweet, database.getCollection(collectionName));
+			insertTweet(tweet, queryName);
 		}
 	}
 

@@ -52,7 +52,8 @@ public class Processor {
 		int geoTweets = 0;
 		for (final Status status : tweetList) {
 			final Tweet tweet = new Tweet();
-			tweet.setId(status.getId());
+			tweet.setId(String.valueOf(status.getId()));
+			log.debug("id: " + tweet.getId());
 			tweet.setText(status.getText());
 
 			// Handle location details
@@ -135,7 +136,6 @@ public class Processor {
 	}
 
 	private List<String> processUrlForImages(String url, String identifier) {
-		// log.debug("Extracting images for Tweet: " + identifier);
 		return new ImageExtractor(localPath).extractImageUrls(url);
 	}
 

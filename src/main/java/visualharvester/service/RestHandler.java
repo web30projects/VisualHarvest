@@ -43,7 +43,7 @@ public class RestHandler {
 
 	}
 
-	static Storage store = new MongoStorage("localhost", 27017, "visualdb");
+	static Storage store = new MongoStorage("localhost", 27017, "visualdb", "visualcollection");
 
 	Logger log = Logger.getLogger(getClass());
 

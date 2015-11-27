@@ -12,9 +12,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class Tweet {
 
 	String text = null;
-	Long id = null;
+	String id = null;
 	Location location = null;
 	String tweetUrl = null;
+
 	List<String> imageUrls = null;
 	List<String> extractedEntities = null;
 
@@ -29,7 +30,7 @@ public class Tweet {
 		return extractedEntities;
 	}
 
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 
@@ -59,7 +60,7 @@ public class Tweet {
 		this.extractedEntities = extractedEntities;
 	}
 
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
