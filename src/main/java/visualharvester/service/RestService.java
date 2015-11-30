@@ -1,5 +1,9 @@
 package visualharvester.service;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 import org.apache.log4j.Logger;
 import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -12,6 +16,9 @@ import org.glassfish.jersey.server.ResourceConfig;
 public class RestService extends BasicService {
 
 	static Logger log = Logger.getLogger(RestService.class);
+
+	String host;
+	int port;
 
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args) {
@@ -30,8 +37,20 @@ public class RestService extends BasicService {
 	}
 
 	public RestService() {
-		final String host = "localhost";
-		final int port = 4222;
+		try (InputStream is = getClass().getClassLoader().getResourceAsStream("visualharvester.properties")) {
+			Properties properties = new Properties();
+			properties.load(is);
+
+			host = properties.get("service.host").toString();
+			String portString = properties.get("service.port").toString();
+			port = Integer.valueOf(portString);
+
+		} catch (IOException e) {
+			log.error("Error opening properties file", e);
+			host = "localhost";
+			port = 4222;
+		}
+
 		serviceUri = uriBuilder.resolveTemplate("host", host).resolveTemplate("port", port).build();
 	}
 

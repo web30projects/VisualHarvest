@@ -102,7 +102,7 @@ public class MongoStorage implements Storage {
 		return tweets;
 	}
 
-	private void insertTweet(Tweet tweet, String queryName) {
+	public void insertTweet(Tweet tweet, String queryName) {
 		final Document document = new Document();
 		document.put("text", tweet.getText());
 		document.put("tweetId", tweet.getId());

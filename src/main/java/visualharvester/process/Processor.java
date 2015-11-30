@@ -68,7 +68,9 @@ public class Processor {
 					final List<ResolvedLocation> extractEntities = entityExtractor.extractEntities(status.getText());
 
 					for (final ResolvedLocation resolvedLocation : extractEntities) {
-						tweet.getExtractedEntities().add(resolvedLocation.getMatchedName());
+						tweet.getExtractedEntities().add(
+								resolvedLocation.getMatchedName() + " with a confidence of "
+										+ resolvedLocation.getConfidence());
 					}
 
 					if (extractEntities.size() == 1) {
@@ -114,15 +116,13 @@ public class Processor {
 				}
 			}
 
+			if (store != null) {
+				store.insertTweet(tweet, criteria);
+			}
 			augmentedTweets.add(tweet);
 		}
 
 		log.debug("Found a total of " + geoTweets + " geotagged tweets");
-
-		if (store != null) {
-			store.clearTweets(criteria);
-			store.storeTweets(augmentedTweets, criteria);
-		}
 
 		return augmentedTweets;
 	}

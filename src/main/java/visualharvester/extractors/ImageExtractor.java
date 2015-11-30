@@ -59,7 +59,7 @@ public class ImageExtractor {
 			urls = getImageUrls(document, getFinalURL(sourceUrl));
 
 		} catch (final IOException e) {
-			log.error("Error Extracting Image URLs from " + sourceUrl, e);
+			log.error("Error Extracting Image URLs from " + sourceUrl);
 		}
 		return urls;
 	}

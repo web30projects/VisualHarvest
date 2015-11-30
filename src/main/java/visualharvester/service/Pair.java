@@ -3,8 +3,8 @@ package visualharvester.service;
 public class Pair {
 	String key, value;
 
-	public Pair(PairKey key, String value) {
-		this.key = key.getKey();
+	public Pair(String key, String value) {
+		this.key = key;
 		this.value = value;
 	}
 

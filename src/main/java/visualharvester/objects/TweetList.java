@@ -1,4 +1,4 @@
-package visualharvester.service;
+package visualharvester.objects;
 
 import java.util.ArrayList;
 import java.util.List;

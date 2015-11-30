@@ -7,7 +7,7 @@ public class ServiceConfig {
 
 	List<Pair> pairs = new ArrayList<>();
 
-	public void put(PairKey key, String value) {
+	public void put(String key, String value) {
 		pairs.add(new Pair(key, value));
 	}
 
@@ -20,9 +20,9 @@ public class ServiceConfig {
 		pairs.add(newPair);
 	}
 
-	public String get(PairKey key) {
+	public String get(String key) {
 		for (Pair pair : pairs) {
-			if (pair.getKey().equals(key.getKey())) {
+			if (pair.getKey().equals(key)) {
 				return pair.getValue();
 			}
 		}

@@ -6,14 +6,16 @@ import visualharvester.objects.Tweet;
 
 public interface Storage {
 
-	public void clearTweets(String collectionName);
+	public void clearTweets(String criteria);
 
 	public void close();
 
 	public void empty();
 
-	public List<Tweet> getTweets(String collectionName);
+	public List<Tweet> getTweets(String criteria);
 
-	public void storeTweets(List<Tweet> tweets, String collectionName);
+	public void storeTweets(List<Tweet> tweets, String criteria);
+
+	public void insertTweet(Tweet tweet, String criteria);
 
 }

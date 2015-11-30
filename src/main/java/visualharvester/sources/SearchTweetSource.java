@@ -31,6 +31,8 @@ public class SearchTweetSource implements TweetSource {
 	@Override
 	public List<Status> getTweets(String containsText) {
 		log.debug("Obtaining " + limit + " tweets via Twitter Search API");
+		boolean searchComplete = false;
+		long tweetCount = 0;
 
 		final Query query;
 
@@ -40,15 +42,62 @@ public class SearchTweetSource implements TweetSource {
 			query = new Query(containsText + " -RT");
 		}
 
+		List<Status> allTweets = new ArrayList<>();
 		query.setLang("en");
-		query.setCount(limit);
+		query.setCount(100);
 		try {
-			final QueryResult queryResult = twitter.search(query);
-			return queryResult.getTweets();
+
+			log.debug("Getting Tweets");
+			QueryResult queryResult = twitter.search(query);
+			List<Status> tweets = queryResult.getTweets();
+			log.debug(queryResult.getRateLimitStatus().toString());
+
+			if (tweets.size() == 0) {
+				log.debug("No tweets found");
+				;
+				searchComplete = true;
+			} else {
+				log.debug("obtained " + tweets.size() + " initial tweets");
+			}
+
+			while (!searchComplete) {
+				tweetCount += tweets.size();
+				allTweets.addAll(tweets);
+
+				if (tweetCount >= limit) {
+					log.debug("Reached enough tweets");
+					searchComplete = true;
+				} else {
+					log.debug("getting MORE tweets");
+					query.setMaxId(minId(tweets));
+					queryResult = twitter.search(query);
+					log.debug(queryResult.getRateLimitStatus().toString());
+					tweets = queryResult.getTweets();
+					if (tweets.size() == 0) {
+						log.debug("no more tweets found");
+						searchComplete = true;
+					} else {
+						log.debug("found " + tweets.size() + " more tweets");
+					}
+				}
+			}
 		} catch (final TwitterException e) {
 			log.error("Error retrieving tweets from Twitter Search API", e);
 		}
-		return new ArrayList<>();
+
+		log.debug("Found " + allTweets.size() + " total tweets");
+		return allTweets;
+	}
+
+	private long minId(List<Status> tweets) {
+		long minId = Long.MAX_VALUE;
+		for (Status status : tweets) {
+			long id = status.getId();
+			if (id < minId) {
+				minId = id;
+			}
+		}
+		return minId;
 	}
 
 	@Override
