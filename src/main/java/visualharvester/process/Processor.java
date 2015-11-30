@@ -29,8 +29,8 @@ public class Processor {
 	String wikibase = "https://en.wikipedia.org/wiki/";
 
 	// TODO Extract these into better properties
-	String localPath = "C:/Users/michael/Desktop/tweets";
-	String indexPath = "C:/clavin/CLAVIN/IndexDirectory";
+	String localPath = "C:/tweets";
+	String indexPath = "C:/clavin/IndexDirectory";
 	GeoParser geoparser = null;
 	Storage store = null;
 
@@ -68,9 +68,8 @@ public class Processor {
 					final List<ResolvedLocation> extractEntities = entityExtractor.extractEntities(status.getText());
 
 					for (final ResolvedLocation resolvedLocation : extractEntities) {
-						tweet.getExtractedEntities().add(
-								resolvedLocation.getMatchedName() + " with a confidence of "
-										+ resolvedLocation.getConfidence());
+						tweet.getExtractedEntities().add(resolvedLocation.getMatchedName() + " with a confidence of "
+								+ resolvedLocation.getConfidence());
 					}
 
 					if (extractEntities.size() == 1) {
