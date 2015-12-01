@@ -44,45 +44,57 @@ public class SearchTweetSource implements TweetSource {
 
 		List<Status> allTweets = new ArrayList<>();
 		query.setLang("en");
-		query.setCount(100);
-		try {
 
-			log.debug("Getting Tweets");
-			QueryResult queryResult = twitter.search(query);
-			List<Status> tweets = queryResult.getTweets();
-			log.debug(queryResult.getRateLimitStatus().toString());
-
-			if (tweets.size() == 0) {
-				log.debug("No tweets found");
-				;
-				searchComplete = true;
-			} else {
-				log.debug("obtained " + tweets.size() + " initial tweets");
-			}
-
-			while (!searchComplete) {
-				tweetCount += tweets.size();
+		if (limit < 100) {
+			try {
+				query.setCount(limit);
+				QueryResult queryResult = twitter.search(query);
+				List<Status> tweets = queryResult.getTweets();
 				allTweets.addAll(tweets);
+			} catch (final TwitterException e) {
+				log.error("Error retrieving tweets from Twitter Search API", e);
+			}
+		} else {
 
-				if (tweetCount >= limit) {
-					log.debug("Reached enough tweets");
+			try {
+				query.setCount(100);
+				log.debug("Getting Tweets");
+				QueryResult queryResult = twitter.search(query);
+				List<Status> tweets = queryResult.getTweets();
+				log.debug(queryResult.getRateLimitStatus().toString());
+
+				if (tweets.size() == 0) {
+					log.debug("No tweets found");
+					;
 					searchComplete = true;
 				} else {
-					log.debug("getting MORE tweets");
-					query.setMaxId(minId(tweets));
-					queryResult = twitter.search(query);
-					log.debug(queryResult.getRateLimitStatus().toString());
-					tweets = queryResult.getTweets();
-					if (tweets.size() == 0) {
-						log.debug("no more tweets found");
+					log.debug("obtained " + tweets.size() + " initial tweets");
+				}
+
+				while (!searchComplete) {
+					tweetCount += tweets.size();
+					allTweets.addAll(tweets);
+
+					if (tweetCount >= limit) {
+						log.debug("Reached enough tweets");
 						searchComplete = true;
 					} else {
-						log.debug("found " + tweets.size() + " more tweets");
+						log.debug("getting MORE tweets");
+						query.setMaxId(minId(tweets));
+						queryResult = twitter.search(query);
+						log.debug(queryResult.getRateLimitStatus().toString());
+						tweets = queryResult.getTweets();
+						if (tweets.size() == 0) {
+							log.debug("no more tweets found");
+							searchComplete = true;
+						} else {
+							log.debug("found " + tweets.size() + " more tweets");
+						}
 					}
 				}
+			} catch (final TwitterException e) {
+				log.error("Error retrieving tweets from Twitter Search API", e);
 			}
-		} catch (final TwitterException e) {
-			log.error("Error retrieving tweets from Twitter Search API", e);
 		}
 
 		log.debug("Found " + allTweets.size() + " total tweets");
