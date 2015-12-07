@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Social Media Visual Harvester</title>
+<!-- JQUERY -->
+<script type="text/javascript" src="jquery-2.1.4.js"></script>
+<!-- JQUERY UI -->
+<script type="text/javascript" src="jquery-ui.js"></script>
+<link rel="stylesheet" href="jquery-ui.css" />
+<!-- Leaflet -->
+<script type="text/javascript" src="leaflet-src.js"></script>
+<link rel="stylesheet" href="leaflet.css" />
+<!-- Custom Page Styling/Scripts -->
+<script type="text/javascript" src="demo.js"></script>
+<link rel="stylesheet" href="map.css" />
+</head>
+
+<body>
+	<div id='controls'>
+		<span id='queryControl'> <label>Query:</label> <input
+			type="text" id='queryField'>
+		</span> <span id='limitControl'> <label>Limit:</label> <input
+			type="text" id='limitField'>
+		</span>
+		<button id="submitButton">Submit</button>
+		<button id="resetButton">Reset</button>
+	</div>
+	<div id="map"></div>
+</body>
+</html>
