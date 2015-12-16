@@ -1,42 +1,101 @@
 package visualharvester.objects;
 
-public class Location {
+/**
+ * Location POJO
+ */
+public class Location
+{
 
-	boolean initialized;
-	double latitude;
-	double longitude;
+   /** flag if the location has been initialized */
+   boolean initialized;
+   /** Latitude Value */
+   double latitude;
+   /** Longitude Value */
+   double longitude;
 
-	public Location() {
-		this.initialized = false;
-	}
+   /**
+    * Location Constructor
+    */
+   public Location()
+   {
+      this.initialized = false;
+   }
 
-	public Location(double latitude, double longitude) {
-		this.latitude = latitude;
-		this.longitude = longitude;
-		this.initialized = true;
-	}
+   /**
+    * Location Parameterized Constructor
+    *
+    * @param latitude
+    *           double
+    * @param longitude
+    *           double
+    */
+   public Location(final double latitude, final double longitude)
+   {
+      this.latitude = latitude;
+      this.longitude = longitude;
+      this.initialized = true;
+   }
 
-	public double getLatitude() {
-		return latitude;
-	}
+   /**
+    * Latitude Getter
+    *
+    * @return latitude
+    */
+   public double getLatitude()
+   {
+      return latitude;
+   }
 
-	public double getLongitude() {
-		return longitude;
-	}
+   /**
+    * Longitude Getter
+    *
+    * @return longitude
+    */
+   public double getLongitude()
+   {
+      return longitude;
+   }
 
-	public boolean isInitialized() {
-		return initialized;
-	}
+   /**
+    * Is this Location initialized
+    *
+    * @return boolean true if initialized, false if not
+    */
+   public boolean isInitialized()
+   {
+      return initialized;
+   }
 
-	public void setInitialized(boolean initialized) {
-		this.initialized = initialized;
-	}
+   /**
+    * Setter for the initialized flag
+    *
+    * @param initialized
+    *           boolean
+    */
+   public void setInitialized(final boolean initialized)
+   {
+      this.initialized = initialized;
+   }
 
-	public void setLatitude(double latitude) {
-		this.latitude = latitude;
-	}
+   /**
+    * Latitude Setter
+    *
+    * @param latitude
+    *           double
+    */
+   public void setLatitude(final double latitude)
+   {
+      this.latitude = latitude;
+   }
 
-	public void setLongitude(double longitude) {
-		this.longitude = longitude;
-	}
+   /**
+    * Longitude Setter
+    *
+    * @param longitude
+    *           double
+    */
+   public void setLongitude(final double longitude)
+   {
+      this.longitude = longitude;
+   }
 }

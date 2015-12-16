@@ -1,27 +1,69 @@
 package visualharvester.service;
 
-public class Pair {
-	String key, value;
+/**
+ * Simple Key-Value Pair object
+ */
+public class Pair
+{
+   /** String defining key string */
+   String key;
+   /** String defining value string */
+   String value;
 
-	public Pair(String key, String value) {
-		this.key = key;
-		this.value = value;
-	}
+   /**
+    * Pair Constructor
+    *
+    * @param key
+    *           String
+    * @param value
+    *           String
+    */
+   public Pair(final String key, final String value)
+   {
+      this.key = key;
+      this.value = value;
+   }
 
-	public String getKey() {
-		return key;
-	}
+   /**
+    * Key String getter
+    *
+    * @return String
+    */
+   public String getKey()
+   {
+      return key;
+   }
 
-	public void setKey(String key) {
-		this.key = key;
-	}
+   /**
+    * Value String getter
+    *
+    * @return String
+    */
+   public String getValue()
+   {
+      return value;
+   }
 
-	public String getValue() {
-		return value;
-	}
+   /**
+    * Key String Setter
+    *
+    * @param key
+    *           String
+    */
+   public void setKey(final String key)
+   {
+      this.key = key;
+   }
 
-	public void setValue(String value) {
-		this.value = value;
-	}
+   /**
+    * Value String setter
+    *
+    * @param value
+    *           String
+    */
+   public void setValue(final String value)
+   {
+      this.value = value;
+   }
 
 }

@@ -13,43 +13,53 @@ import org.junit.Test;
 
 import com.google.common.io.Files;
 
-public class TestImageExtractor {
+public class TestImageExtractor
+{
 
-	private static final String testUrl = "https://en.wikipedia.org/wiki/Binary_tree";
-	static File directory;
+   @AfterClass
+   public static void afterClass()
+   {
+      deleteDirectory(directory);
+   }
+   @BeforeClass
+   public static void beforeClass()
+   {
+      directory = Files.createTempDir();
+   }
 
-	@AfterClass
-	public static void afterClass() {
-		deleteDirectory(directory);
-	}
+   private static void deleteDirectory(final File directory)
+   {
+      for (final File file : directory.listFiles())
+      {
+         if (file.isDirectory())
+         {
+            deleteDirectory(file);
+         }
+         else
+         {
+            file.delete();
+         }
+      }
+      directory.delete();
+   }
 
-	@BeforeClass
-	public static void beforeClass() {
-		directory = Files.createTempDir();
-	}
+   private static final String testUrl = "https://en.wikipedia.org/wiki/Binary_tree";
 
-	private static void deleteDirectory(File directory) {
-		for (final File file : directory.listFiles()) {
-			if (file.isDirectory()) {
-				deleteDirectory(file);
-			} else {
-				file.delete();
-			}
-		}
-		directory.delete();
-	}
+   static File directory;
 
-	Logger log = Logger.getLogger(getClass());
+   Logger log = Logger.getLogger(getClass());
 
-	@Test
-	public void testExtractImageUrls() {
-		log.debug("testExtractImageUrls");
+   @Test
+   public void testExtractImageUrls()
+   {
+      log.debug("testExtractImageUrls");
 
-		final ImageExtractor imageExtractor = new ImageExtractor(directory.getAbsolutePath());
-		final List<String> extractedUrls = imageExtractor.extractImageUrls(testUrl);
+      final ImageExtractor imageExtractor = new ImageExtractor(directory.getAbsolutePath());
+      final List<String> extractedUrls = imageExtractor.extractImageUrls(testUrl);
 
-		assertTrue(extractedUrls.contains("https://en.wikipedia.org/wiki/File:Waldburg_Ahnentafel.jpg"));
-		assertEquals(1, extractedUrls.size());
-	}
+      assertTrue(extractedUrls
+            .contains("https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Waldburg_Ahnentafel.jpg/220px-Waldburg_Ahnentafel.jpg"));
+      assertEquals(1, extractedUrls.size());
+   }
 
 }

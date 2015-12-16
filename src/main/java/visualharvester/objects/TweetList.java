@@ -7,31 +7,59 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import visualharvester.objects.Tweet;
-
+/**
+ * Tweet List Class with JAX-B support
+ */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-public class TweetList {
+public class TweetList
+{
 
-	List<Tweet> tweets;
+   /** List of Tweets */
+   List<Tweet> tweets;
 
-	public TweetList() {
+   /**
+    * Constructor
+    */
+   public TweetList()
+   {
 
-	}
+   }
 
-	public TweetList(List<Tweet> tweets) {
-		this.tweets = tweets;
-	}
+   /**
+    * Parameterized Constructor
+    *
+    * @param tweets
+    *           List<Tweet>
+    */
+   public TweetList(final List<Tweet> tweets)
+   {
+      this.tweets = tweets;
+   }
 
-	public List<Tweet> getTweets() {
-		if (tweets == null) {
-			tweets = new ArrayList<>();
-		}
-		return tweets;
-	}
+   /**
+    * List of Tweets Getter
+    *
+    * @return List<Tweet>
+    */
+   public List<Tweet> getTweets()
+   {
+      if (tweets == null)
+      {
+         tweets = new ArrayList<>();
+      }
+      return tweets;
+   }
 
-	public void setTweets(List<Tweet> tweets) {
-		this.tweets = tweets;
-	}
+   /**
+    * List of Tweets Setter
+    *
+    * @param tweets
+    *           List<Tweet>
+    */
+   public void setTweets(final List<Tweet> tweets)
+   {
+      this.tweets = tweets;
+   }
 
 }

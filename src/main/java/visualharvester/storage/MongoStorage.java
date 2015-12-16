@@ -6,146 +6,189 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.bson.Document;
 
+import visualharvester.objects.Location;
+import visualharvester.objects.Tweet;
+
 import com.mongodb.BasicDBList;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
-import visualharvester.objects.Location;
-import visualharvester.objects.Tweet;
+/**
+ * MongoDB based Storage Implementation
+ */
+public class MongoStorage implements Storage
+{
+   /** The Logger */
+   Logger log = Logger.getLogger(getClass());
 
-public class MongoStorage implements Storage {
+   /** MongoDB Client object */
+   MongoClient client;
+   /** MongoDB Database object */
+   MongoDatabase database;
+   /** MongoDB Collection object */
+   MongoCollection<Document> collection;
+   /** MongoDB instance hostname */
+   String hostname;
+   /** MongoDB instance port value */
+   int port;
+   /** MongoDB Database name */
+   String databaseName;
+   /** MongoDB Collection name */
+   String collectionName;
 
-	Logger log = Logger.getLogger(getClass());
-	MongoClient client;
-	MongoDatabase database;
-	MongoCollection<Document> collection;
+   /**
+    * Constructor
+    *
+    * @param hostname
+    *           String
+    * @param port
+    *           int
+    * @param databaseName
+    *           String
+    * @param collectionName
+    *           String
+    */
+   public MongoStorage(final String hostname, final int port, final String databaseName, final String collectionName)
+   {
+      this.hostname = hostname;
+      this.port = port;
+      this.databaseName = databaseName;
+      this.collectionName = collectionName;
 
-	String hostname;
-	int port;
-	String databaseName;
-	String collectionName;
+      client = new MongoClient(hostname, port);
+      database = client.getDatabase(databaseName);
+      collection = database.getCollection(collectionName);
+   }
 
-	public MongoStorage(String hostname, int port, String databaseName, String collectionName) {
-		this.hostname = hostname;
-		this.port = port;
-		this.databaseName = databaseName;
-		this.collectionName = collectionName;
+   @Override
+   public void clearTweets(final String queryName)
+   {
+      final Document deleteCriteria = new Document();
+      deleteCriteria.put("query", queryName);
+      collection.deleteMany(deleteCriteria);
+   }
 
-		client = new MongoClient(hostname, port);
-		database = client.getDatabase(databaseName);
-		collection = database.getCollection(collectionName);
-	}
+   @Override
+   public void close()
+   {
+      client.close();
 
-	@Override
-	public void clearTweets(String queryName) {
-		Document deleteCriteria = new Document();
-		deleteCriteria.put("query", queryName);
-		collection.deleteMany(deleteCriteria);
-	}
+   }
 
-	@Override
-	public void close() {
-		client.close();
+   @Override
+   public void empty()
+   {
+      database.drop();
+   }
 
-	}
+   @Override
+   public List<Tweet> getTweets(final String queryName)
+   {
 
-	@Override
-	public void empty() {
-		database.drop();
-	}
+      collection = database.getCollection(collectionName);
 
-	@Override
-	public List<Tweet> getTweets(String queryName) {
+      final Document getCriteria = new Document();
+      getCriteria.put("query", queryName);
 
-		final MongoCollection<Document> collection = database.getCollection(collectionName);
+      final FindIterable<Document> find = collection.find(getCriteria);
 
-		Document getCriteria = new Document();
-		getCriteria.put("query", queryName);
+      final List<Tweet> tweets = new ArrayList<>();
+      for (final Document doc : find)
+      {
+         final Tweet tweet = new Tweet();
+         tweet.setText(doc.getString("text"));
+         tweet.setTweetUrl(doc.getString("url"));
+         tweet.setId(doc.getString("tweetId"));
 
-		final FindIterable<Document> find = collection.find(getCriteria);
+         final Location loc = new Location();
+         loc.setInitialized(true);
 
-		final List<Tweet> tweets = new ArrayList<>();
-		for (final Document doc : find) {
-			final Tweet tweet = new Tweet();
-			tweet.setText(doc.getString("text"));
-			tweet.setTweetUrl(doc.getString("url"));
-			tweet.setId(doc.getString("tweetId"));
+         final Document locationDoc = doc.get("loc", Document.class);
+         loc.setLatitude(locationDoc.getDouble("latitude").doubleValue());
+         loc.setLongitude(locationDoc.getDouble("longitude").doubleValue());
+         tweet.setLocation(loc);
 
-			final Location loc = new Location();
-			loc.setInitialized(true);
+         final List<String> imageUrls = new ArrayList<>();
+         final List<?> urls = doc.get("images", List.class);
 
-			final Document locationDoc = doc.get("loc", Document.class);
-			loc.setLatitude(locationDoc.getDouble("latitude"));
-			loc.setLongitude(locationDoc.getDouble("longitude"));
-			tweet.setLocation(loc);
+         for (final Object object : urls)
+         {
+            imageUrls.add(object.toString());
+         }
+         tweet.setImageUrls(imageUrls);
 
-			final List<String> imageUrls = new ArrayList<>();
-			final List<?> urls = doc.get("images", List.class);
+         final List<String> entities = new ArrayList<>();
+         final List<?> entityList = doc.get("entities", List.class);
+         for (final Object object : entityList)
+         {
+            entities.add(object.toString());
+         }
+         tweet.setExtractedEntities(entities);
 
-			for (final Object object : urls) {
-				imageUrls.add(object.toString());
-			}
-			tweet.setImageUrls(imageUrls);
+         tweets.add(tweet);
+      }
 
-			final List<String> entities = new ArrayList<>();
-			final List<?> entityList = doc.get("entities", List.class);
-			for (final Object object : entityList) {
-				entities.add(object.toString());
-			}
-			tweet.setExtractedEntities(entities);
+      return tweets;
+   }
 
-			tweets.add(tweet);
-		}
+   @Override
+   public void insertTweet(final Tweet tweet, final String queryName)
+   {
+      final Document document = new Document();
+      document.put("text", tweet.getText());
+      document.put("tweetId", tweet.getId());
+      document.put("url", tweet.getTweetUrl());
+      document.put("query", queryName);
 
-		return tweets;
-	}
+      final List<String> imageUrls = tweet.getImageUrls();
+      final BasicDBList urlList = new BasicDBList();
+      for (final String url : imageUrls)
+      {
+         urlList.add(url);
+      }
+      document.put("images", urlList);
 
-	public void insertTweet(Tweet tweet, String queryName) {
-		final Document document = new Document();
-		document.put("text", tweet.getText());
-		document.put("tweetId", tweet.getId());
-		document.put("url", tweet.getTweetUrl());
-		document.put("query", queryName);
+      final BasicDBList entityList = new BasicDBList();
+      final List<String> entities = tweet.getExtractedEntities();
+      for (final String entity : entities)
+      {
+         entityList.add(entity);
+      }
+      document.put("entities", entityList);
 
-		final List<String> imageUrls = tweet.getImageUrls();
-		final BasicDBList urlList = new BasicDBList();
-		for (final String url : imageUrls) {
-			urlList.add(url);
-		}
-		document.put("images", urlList);
+      final Location location = tweet.getLocation();
 
-		final BasicDBList entityList = new BasicDBList();
-		final List<String> entities = tweet.getExtractedEntities();
-		for (final String entity : entities) {
-			entityList.add(entity);
-		}
-		document.put("entities", entityList);
+      if (location.isInitialized())
+      {
+         final Document loc = new Document();
+         loc.put("latitude", new Double(location.getLatitude()));
+         loc.put("longitude", new Double(location.getLongitude()));
+         document.put("loc", loc);
+      }
+      else
+      {
+         return;
+      }
 
-		final Location location = tweet.getLocation();
+      try
+      {
+         collection.insertOne(document);
+      }
+      catch (final Exception e)
+      {
+         log.error(e);
+      }
+   }
 
-		if (location.isInitialized()) {
-			final Document loc = new Document();
-			loc.put("latitude", location.getLatitude());
-			loc.put("longitude", location.getLongitude());
-			document.put("loc", loc);
-		} else {
-			return;
-		}
-
-		try {
-			collection.insertOne(document);
-		} catch (final Exception e) {
-			log.error(e);
-		}
-	}
-
-	@Override
-	public void storeTweets(List<Tweet> tweets, String queryName) {
-		for (final Tweet tweet : tweets) {
-			insertTweet(tweet, queryName);
-		}
-	}
+   @Override
+   public void storeTweets(final List<Tweet> tweets, final String queryName)
+   {
+      for (final Tweet tweet : tweets)
+      {
+         insertTweet(tweet, queryName);
+      }
+   }
 
 }

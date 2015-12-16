@@ -18,10 +18,6 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.bson.Document;
 
-import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-
 import twitter4j.TwitterFactory;
 import visualharvester.objects.Location;
 import visualharvester.objects.Tweet;
@@ -32,183 +28,260 @@ import visualharvester.sources.TweetSource;
 import visualharvester.storage.MongoStorage;
 import visualharvester.storage.Storage;
 
+import com.mongodb.MongoClient;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+
+/**
+ * Jersey Resource class for all REST request processing
+ */
 @Path("api")
-public class RestHandler {
+public class RestHandler
+{
 
-	private class AugmentRunner implements Runnable {
+   /**
+    * Threaded processing class
+    */
+   private class AugmentRunner implements Runnable
+   {
+      /** Processor object */
+      Processor processor;
+      /** Query Criteria */
+      String criteria;
+      /** Flag if lack of coordinates should be ignored */
+      boolean ignoreCoordinates;
 
-		Processor processor;
-		String criteria;
-		boolean ignoreCoordinates;
+      /**
+       * Constructor
+       *
+       * @param processor
+       *           Processor
+       * @param criteria
+       *           String
+       * @param ignoreCoordinates
+       *           boolean
+       */
+      public AugmentRunner(final Processor processor, final String criteria, final boolean ignoreCoordinates)
+      {
+         this.processor = processor;
+         this.criteria = criteria;
+         this.ignoreCoordinates = ignoreCoordinates;
+      }
 
-		public AugmentRunner(Processor processor, String criteria, boolean ignoreCoordinates) {
-			this.processor = processor;
-			this.criteria = criteria;
-			this.ignoreCoordinates = ignoreCoordinates;
-		}
+      @Override
+      public void run()
+      {
+         processor.augmentTweets(criteria, ignoreCoordinates);
+      }
 
-		@Override
-		public void run() {
-			processor.augmentTweets(criteria, ignoreCoordinates);
-		}
+   }
 
-	}
+   /** The Storage implementor */
+   static Storage store = null;
+   /** The MongoDB hostname */
+   private String host;
+   /** The MongoDB port */
+   private int port;
+   /** The MongoDB database name */
+   private String database;
+   /** The MongoDB collection name */
+   private String collection;
 
-	static Storage store = null;
-	private String host;
-	private int port;
-	private String database;
+   /** The Logger */
+   Logger log = Logger.getLogger(getClass());
 
-	private String collection;
+   /**
+    * REST Endpoint for augmenting a certain limit of Tweets
+    *
+    * @param query
+    *           String
+    * @param limit
+    *           String (numeric)
+    * @return Response ok if augmentation request was a success
+    */
+   @Path("augment/{query}/{limit}")
+   @GET
+   public Response augmentTweets(@PathParam("query") final String query, @PathParam("limit") final String limit)
+   {
+      log.debug("GET: augmentTweets: " + query + "\tlimit string: " + limit);
 
-	Logger log = Logger.getLogger(getClass());
+      if (store == null)
+      {
+         initializeStore();
+      }
 
-	@Path("augment/{query}/{limit}")
-	@GET
-	public Response augmentTweets(@PathParam("query") String query, @PathParam("limit") String limit) {
-		log.debug("GET: augmentTweets: " + query + "\tlimit string: " + limit);
+      int limitValue = 20;
 
-		if (store == null) {
-			initializeStore();
-		}
+      try
+      {
+         limitValue = Integer.parseInt(limit);
+      }
+      catch (final Exception e)
+      {
+         log.error("could not parse provided limit value, using default");
+      }
 
-		int limitValue = 20;
+      final TweetSource source = new SearchTweetSource(TwitterFactory.getSingleton());
+      source.sourceLimit(limitValue);
+      source.disableRetweets();
+      final Processor processor = new Processor(source);
+      processor.setStore(store);
 
-		try {
-			limitValue = Integer.parseInt(limit);
-		} catch (final Exception e) {
-			log.error("could not parse provided limit value, using default");
-		}
+      final AugmentRunner runner = new AugmentRunner(processor, query, true);
+      final ExecutorService executor = Executors.newSingleThreadExecutor();
+      executor.submit(runner);
 
-		final TweetSource source = new SearchTweetSource(TwitterFactory.getSingleton());
-		source.sourceLimit(limitValue);
-		source.disableRetweets();
-		final Processor processor = new Processor(source);
-		processor.setStore(store);
+      return Response.ok().build();
+   }
 
-		final AugmentRunner runner = new AugmentRunner(processor, query, true);
-		final ExecutorService executor = Executors.newSingleThreadExecutor();
-		executor.submit(runner);
+   /**
+    * Method to clear database of all current tweets
+    *
+    * @return Response
+    */
+   @Path("clear")
+   @GET
+   @Produces(MediaType.APPLICATION_JSON)
+   public Response clearTweets()
+   {
+      log.debug("GET: clearTweets");
+      if (store == null)
+      {
+         initializeStore();
+      }
+      store.empty();
+      return Response.ok().build();
+   }
 
-		return Response.ok().build();
-	}
+   /**
+    * Method to obtain a list of augmented tweets
+    *
+    * @param query
+    *           String
+    * @param limit
+    *           String (numeric)
+    * @return Response containing a JSON list of tweet objects
+    */
+   @Path("fetch/{query}/{limit}")
+   @GET
+   @Produces(MediaType.APPLICATION_JSON)
+   public Response fetchTweets(@PathParam("query") final String query, @PathParam("limit") final String limit)
+   {
+      log.debug("GET: augmentTweets: " + query + "\tlimit string: " + limit);
 
-	@Path("clear")
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response clearTweets() {
-		log.debug("GET: clearTweets");
-		if (store == null) {
-			initializeStore();
-		}
-		store.empty();
-		return Response.ok().build();
-	}
+      final TweetList list = new TweetList();
+      final int limitValue = Integer.parseInt(limit);
 
-	@Path("fetch/{query}/{limit}")
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response fetchTweets(@PathParam("query") String query, @PathParam("limit") String limit) {
-		log.debug("GET: augmentTweets: " + query + "\tlimit string: " + limit);
+      // TODO try-with-resources should be:
+      // try(final MongoClient client = new MongoClient(host, port)){
+      try (final MongoClient client = new MongoClient("74.140.208.12", 6789))
+      {
+         final MongoCollection<Document> coll = client.getDatabase("visualdb").getCollection("visualcollection");
 
-		final TweetList list = new TweetList();
+         final Document queryDoc = new Document();
+         queryDoc.put("query", query);
 
-		final int limitValue = Integer.parseInt(limit);
+         final FindIterable<Document> results = coll.find(queryDoc);
 
-		final MongoClient client = new MongoClient("74.140.208.12", 6789);
-		final MongoCollection<Document> coll = client.getDatabase("visualdb").getCollection("visualcollection");
+         int count = 0;
+         for (final Document doc : results)
+         {
+            count++;
 
-		final Document queryDoc = new Document();
-		queryDoc.put("query", query);
+            final Tweet tweet = new Tweet();
+            tweet.setText(doc.getString("text"));
+            tweet.setTweetUrl(doc.getString("url"));
+            tweet.setId(doc.getString("tweetId"));
 
-		final FindIterable<Document> results = coll.find(queryDoc);
+            final Location loc = new Location();
+            loc.setInitialized(true);
 
-		int count = 0;
-		for (final Document doc : results) {
-			count++;
+            final Document locationDoc = doc.get("loc", Document.class);
+            loc.setLatitude(locationDoc.getDouble("latitude").doubleValue());
+            loc.setLongitude(locationDoc.getDouble("longitude").doubleValue());
+            tweet.setLocation(loc);
 
-			final Tweet tweet = new Tweet();
-			tweet.setText(doc.getString("text"));
-			tweet.setTweetUrl(doc.getString("url"));
-			tweet.setId(doc.getString("tweetId"));
+            final List<String> imageUrls = new ArrayList<>();
+            final List<?> urls = doc.get("images", List.class);
 
-			final Location loc = new Location();
-			loc.setInitialized(true);
+            for (final Object object : urls)
+            {
+               imageUrls.add(object.toString());
+            }
+            tweet.setImageUrls(imageUrls);
 
-			final Document locationDoc = doc.get("loc", Document.class);
-			loc.setLatitude(locationDoc.getDouble("latitude"));
-			loc.setLongitude(locationDoc.getDouble("longitude"));
-			tweet.setLocation(loc);
+            final List<String> entities = new ArrayList<>();
+            final List<?> entityList = doc.get("entities", List.class);
+            for (final Object object : entityList)
+            {
+               entities.add(object.toString());
+            }
+            tweet.setExtractedEntities(entities);
+            list.getTweets().add(tweet);
 
-			final List<String> imageUrls = new ArrayList<>();
-			final List<?> urls = doc.get("images", List.class);
+            if (count > limitValue)
+            {
+               break;
+            }
+         }
+      }
 
-			for (final Object object : urls) {
-				imageUrls.add(object.toString());
-			}
-			tweet.setImageUrls(imageUrls);
+      return Response.ok(list).build();
+   }
 
-			final List<String> entities = new ArrayList<>();
-			final List<?> entityList = doc.get("entities", List.class);
-			for (final Object object : entityList) {
-				entities.add(object.toString());
-			}
-			tweet.setExtractedEntities(entities);
-			list.getTweets().add(tweet);
+   /**
+    * Method to obtain all augmented tweets from the Storage object
+    *
+    * @param query
+    *           String
+    * @return Response containing a JSON list of tweets
+    */
+   @Path("tweets/{query}")
+   @GET
+   @Produces(MediaType.APPLICATION_JSON)
+   public Response getTweets(@PathParam("query") final String query)
+   {
+      log.debug("GET: getTweets");
 
-			if (count > limitValue) {
-				break;
-			}
-		}
+      if (store == null)
+      {
+         initializeStore();
+      }
 
-		return Response.ok(list).build();
-	}
+      final List<Tweet> tweets = store.getTweets(query);
+      final TweetList list = new TweetList();
+      list.setTweets(tweets);
+      return Response.ok(list).build();
+   }
 
-	@Path("test")
-	@GET
-	@Produces(MediaType.TEXT_PLAIN)
-	public String getTest() {
-		log.debug("GET: test");
-		return "test success";
-	}
+   /**
+    * Method to initial the Storage Implemented
+    */
+   private void initializeStore()
+   {
+      log.debug("initializing MongoStore");
+      try (InputStream is = getClass().getClassLoader().getResourceAsStream("visualharvester.properties"))
+      {
+         final Properties properties = new Properties();
+         properties.load(is);
 
-	@Path("tweets/{query}")
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getTweets(@PathParam("query") String query) {
-		log.debug("GET: getTweets");
+         host = properties.get("mongo.host").toString();
+         final String portString = properties.get("mongo.port").toString();
+         port = Integer.valueOf(portString).intValue();
+         database = properties.get("mongo.database").toString();
+         collection = properties.get("mongo.collection").toString();
 
-		if (store == null) {
-			initializeStore();
-		}
+      }
+      catch (final IOException e)
+      {
+         log.error("Could not open properties file, using defaults", e);
+         host = "localhost";
+         port = 27017;
+         database = "visualdb";
+         collection = "visualcollection";
+      }
 
-		final List<Tweet> tweets = store.getTweets(query);
-		final TweetList list = new TweetList();
-		list.setTweets(tweets);
-		return Response.ok(list).build();
-	}
+      store = new MongoStorage(host, port, database, collection);
 
-	private void initializeStore() {
-		log.debug("initializing MongoStore");
-		try (InputStream is = getClass().getClassLoader().getResourceAsStream("visualharvester.properties")) {
-			final Properties properties = new Properties();
-			properties.load(is);
-
-			host = properties.get("mongo.host").toString();
-			final String portString = properties.get("mongo.port").toString();
-			port = Integer.valueOf(portString);
-			database = properties.get("mongo.database").toString();
-			collection = properties.get("mongo.collection").toString();
-
-		} catch (final IOException e) {
-			log.error("Could not open properties file, using defaults", e);
-			host = "localhost";
-			port = 27017;
-			database = "visualdb";
-			collection = "visualcollection";
-		}
-
-		store = new MongoStorage(host, port, database, collection);
-
-	}
+   }
 }
